@@ -2,3 +2,4 @@ streamlit
 flask
 tensorflow
 matplotlib
+opencv-python-headless
