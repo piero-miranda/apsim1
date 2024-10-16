@@ -150,11 +150,23 @@ def iniciar_segmentacion(session_state):
 
     if image_file is not None:
         image = Image.open(image_file)
-        st.image(image, caption='Imagen cargada correctamente', use_column_width=True)
+
+        # Limitar el tamaño de la imagen
+        resized_image = image.resize((300, 300))  # Cambiar a las dimensiones que desees
+        
+        # Crear dos columnas: una para la imagen original y otra para la imagen segmentada
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.image(resized_image, caption='Imagen cargada correctamente', use_column_width=True)
 
         if st.button('Procesar imagen'):
             processed_image = process_image(image, model)
-            st.image(processed_image, caption='Máscara segmentada', use_column_width=True)
+            with col2:
+                if processed_image is not None:
+                    st.image(processed_image, caption='Máscara segmentada', use_column_width=True)
+    
+    # Botón para volver a la interfaz principal
     if st.button("Atrás"):
         session_state.page = 'panel'
 
@@ -162,7 +174,7 @@ def iniciar_segmentacion(session_state):
 def process_image(image, model):
     try:
         image = np.array(image)
-        image = cv2.resize(image, (224, 224))  # Cambiar a las dimensiones necesarias
+        image = cv2.resize(image, (224, 224))  # Cambiar a las dimensiones necesarias para el modelo
         image = image / 255.0  # Normalizar la imagen
         image = np.expand_dims(image, axis=0)
 
