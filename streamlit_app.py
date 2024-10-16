@@ -3,6 +3,8 @@ import tensorflow as tf
 from PIL import Image
 import cv2
 import numpy as np
+import json
+import os
 
 # Cargar el modelo de TensorFlow
 @st.cache_resource
@@ -12,9 +14,24 @@ def load_model():
 
 model = load_model()
 
-# Diccionario temporal para almacenar usuarios registrados
+# Ruta del archivo JSON para almacenar usuarios
+USER_DATA_FILE = 'users.json'
+
+# Función para cargar usuarios desde el archivo JSON
+def load_users():
+    if os.path.exists(USER_DATA_FILE):
+        with open(USER_DATA_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+# Función para guardar usuarios en el archivo JSON
+def save_users(users):
+    with open(USER_DATA_FILE, 'w') as f:
+        json.dump(users, f)
+
+# Cargar usuarios al iniciar la app
 if 'users' not in st.session_state:
-    st.session_state.users = {}
+    st.session_state.users = load_users()
 
 # Almacenar el estado de la página actual
 if 'page' not in st.session_state:
@@ -64,7 +81,8 @@ def login_page(session_state):
     
     if st.button("Login"):
         # Verificar si el usuario existe y la contraseña es correcta
-        if username in session_state.users and session_state.users[username] == password:
+        users = load_users()  # Cargar usuarios del archivo
+        if username in users and users[username] == password:
             session_state.logged_in = True
             session_state.username = username
             # Cambiar al panel principal
@@ -84,9 +102,14 @@ def register_page(session_state):
     
     if st.button("Registrarse"):
         if new_password == confirm_password:
-            # Almacenar el nuevo usuario en el diccionario
-            session_state.users[new_username] = new_password
-            st.success(f"Registrado con éxito. Ahora puedes iniciar sesión con {new_username}")
+            users = load_users()  # Cargar usuarios actuales
+            if new_username in users:
+                st.error("El nombre de usuario ya existe. Elige otro.")
+            else:
+                # Añadir el nuevo usuario al diccionario y guardarlo en el archivo
+                users[new_username] = new_password
+                save_users(users)
+                st.success(f"Registrado con éxito. Ahora puedes iniciar sesión con {new_username}")
         else:
             st.error("Las contraseñas no coinciden")
 
@@ -174,7 +197,7 @@ def iniciar_segmentacion(session_state):
 def process_image(image, model):
     try:
         image = np.array(image)
-        image = cv2.resize(image, (224, 224))  # Cambiar a las dimensiones necesarias para el modelo
+        image = cv2.resize(image, (224, 224))  # Cambiar a las dimensiones necesarias
         image = image / 255.0  # Normalizar la imagen
         image = np.expand_dims(image, axis=0)
 
