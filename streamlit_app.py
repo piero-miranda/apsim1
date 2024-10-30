@@ -17,7 +17,7 @@ if not os.path.exists(SEGMENTATION_DIR):
     os.makedirs(SEGMENTATION_DIR)
 
 # URL del logo temporal de IEEE
-logo_url = "https://logonoid.com/images/ieee-logo.png"
+logo_url = "https://cdn3.iconfinder.com/data/icons/science-indigo-vol-1/256/Artificial_Intelligence-512.png"
 
 # Colores personalizados
 primary_color = "#0057B7"  # Color azul del logo
@@ -234,7 +234,7 @@ def home_page():
         </h1>
 
         <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
-            <img src="https://lh4.googleusercontent.com/A3g5VTnHR0dE7vUzMDVIGvABWdVulUQXzF-3FdDXgFSRE-tHYmYhH1XJoAv6-ZF1PJMv2DVGyBrNq_BPM5nr2hQYtc5MA1TctOBWFZngZj2MRWkB9LVMZS93HzUVWxOLYA=w1280" alt="Imagen de bienvenida" width="400">
+            <img src="https://www.aimtechnologies.co/wp-content/uploads/2023/09/Audience-Segmentation-Marketing-1.png" alt="Imagen de bienvenida" width="400">
         </div>
         
         <p style='text-align: center; font-size: 1.2em; color: #555; margin-top: 30px; margin-bottom: 50px;'>

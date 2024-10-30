@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = './'
-ALLOWED_EXTENSIONS = {'h5'}
+ALLOWED_EXTENSIONS = {'h5', 'png'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

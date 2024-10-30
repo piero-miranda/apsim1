@@ -3,3 +3,4 @@ flask
 tensorflow
 matplotlib
 opencv-python-headless
+reportlab
