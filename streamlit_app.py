@@ -359,7 +359,34 @@ def panel_page():
         st.session_state.username = None  # Limpiar el nombre de usuario de la sesión
     st.markdown("</div>", unsafe_allow_html=True)
 
+from io import BytesIO
+from fpdf import FPDF
 
+# Función para generar un PDF del paciente
+def export_patient_to_pdf(patient):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Información del Paciente", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Nombre: {patient['name']}", ln=True)
+    pdf.cell(200, 10, txt=f"Edad: {patient['age']}", ln=True)
+    pdf.cell(200, 10, txt=f"Sexo: {patient['sex']}", ln=True)
+    pdf.cell(200, 10, txt=f"DNI: {patient['dni']}", ln=True)
+
+    # Agregar imágenes segmentadas al PDF
+    if patient.get('segmentations'):
+        for idx, seg_path in enumerate(patient['segmentations'], start=1):
+            pdf.cell(200, 10, txt=f"Segmentación {idx}", ln=True)
+            pdf.image(seg_path, w=100)  # Ajusta el tamaño de la imagen según sea necesario
+
+    # Guardar el PDF en un objeto BytesIO
+    pdf_output = BytesIO()
+    pdf.output(pdf_output, 'F')
+    pdf_output.seek(0)
+    return pdf_output
+
+
+# Función principal para buscar paciente y exportar datos
 def buscar_paciente():
     header()
 
@@ -371,10 +398,12 @@ def buscar_paciente():
         """,
         unsafe_allow_html=True
     )
+    
     search_dni = st.text_input("Buscar paciente por DNI", key="search_dni")
     
+    found = False  # Inicializar found antes de su uso
+
     if st.button("Buscar", key="buscar_button"):
-        found = False
         for patient in st.session_state.patients:
             if patient['dni'] == search_dni:
                 st.write(f"**Nombre:** {patient['name']}")
@@ -392,9 +421,17 @@ def buscar_paciente():
                 break
         if not found:
             st.error("Paciente no encontrado. Verifica el DNI.")
-    
+
+    # Verificar si se encontró al paciente antes de mostrar los botones de exportación
+    if found:
+        # Botón para exportar la información a PDF
+        pdf_data = export_patient_to_pdf(patient)
+        st.download_button("Descargar PDF", data=pdf_data, file_name=f"{patient['name']}_info.pdf", mime="application/pdf")
+
+    # Botón "Atrás" para volver a la página del panel
     if st.button("Atrás", key="back_button"):
         set_page('panel')
+
 
 
 # Página para registrar un nuevo paciente
@@ -504,6 +541,49 @@ def iniciar_segmentacion():
     # Botón "Atrás" para volver a la página del panel
     if st.button("Atrás"):
         set_page("panel")
+
+
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import tempfile
+
+def export_patient_to_pdf(patient):
+    # Crear un archivo temporal
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        c = canvas.Canvas(tmp_file.name, pagesize=letter)
+        
+        # Información del paciente
+        c.drawString(100, 750, f"Nombre: {patient['name']}")
+        c.drawString(100, 730, f"Edad: {patient['age']}")
+        c.drawString(100, 710, f"Sexo: {patient['sex']}")
+        c.drawString(100, 690, f"DNI: {patient['dni']}")
+        
+        # Espacio para las segmentaciones
+        y_position = 650
+        for idx, seg_path in enumerate(patient.get("segmentations", [])):
+            c.drawString(100, y_position, f"Segmentación {idx + 1}:")
+            y_position -= 20
+            
+            # Insertar la imagen segmentada
+            image = Image.open(seg_path)
+            image_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+            image.save(image_path.name)
+            c.drawImage(image_path.name, 100, y_position - 200, width=200, height=200)
+            y_position -= 220
+            
+            # Limitar el número de imágenes por página
+            if y_position < 100:
+                c.showPage()  # Nueva página
+                y_position = 750
+
+        c.save()
+        
+        # Leer el archivo PDF generado
+        tmp_file.seek(0)
+        pdf_data = tmp_file.read()
+    
+    return pdf_data
+
 
 # Función de asignación de segmentación con verificación de máscara segmentada en session_state
 def asignar_segmentacion_page():
